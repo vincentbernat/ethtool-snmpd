@@ -39,11 +39,11 @@ ethtool MODULE-IDENTITY
 imsco			OBJECT IDENTIFIER ::= { enterprises 39178 }
 project			OBJECT IDENTIFIER ::= { imsco 100 }
 
-ShortDisplayString ::= TEXTUAL-CONVENTION
-        DISPLAY-HINT "100a"
+EthtoolStatString ::= TEXTUAL-CONVENTION
+        DISPLAY-HINT "32a"
         STATUS       current
-        DESCRIPTION  "A shorter version of SNMPv2-TC::DisplayString."
-        SYNTAX       OCTET STRING (SIZE (0..100))
+        DESCRIPTION  "Name of statistic"
+        SYNTAX       OCTET STRING (SIZE (1..32))
 
 
 ---
@@ -64,16 +64,16 @@ ethtoolStatEntry OBJECT-TYPE
     STATUS current
     DESCRIPTION
 	"Statistic for one interface"
-    INDEX { ifIndex, ethtoolStatName }
+    INDEX { ifIndex, IMPLIED ethtoolStatName }
     ::= { ethtoolStatTable 1 }
 
 EthtoolStatEntry ::= SEQUENCE {
-    ethtoolStatName ShortDisplayString,
+    ethtoolStatName EthtoolStatString,
     ethtoolStat     Counter64
 }
 
 ethtoolStatName OBJECT-TYPE
-    SYNTAX ShortDisplayString
+    SYNTAX EthtoolStatString
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
