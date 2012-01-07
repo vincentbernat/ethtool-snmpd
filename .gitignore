@@ -1,2 +1,4 @@
 *~
 *.o
+.index
+cscope.*
