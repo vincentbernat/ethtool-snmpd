@@ -58,8 +58,7 @@ refresh_cache(void) {
     goto endrefresh;
   }
 
-  struct ifaddrs   *ifap = NULL;
-  struct ifaddrs   *ifa;
+  struct ifaddrs *ifap = NULL, *ifa, *ifaprev;
   if (getifaddrs(&ifap) != 0) {
     log_warn("Unable to get list of available interfaces");
     goto endrefresh;
@@ -76,6 +75,13 @@ refresh_cache(void) {
     struct ethtool_stats    *stats   = NULL;
     struct ifreq ifr;
     unsigned int n_stats, sz_str, sz_stats, i, ifindex;
+
+    /* We want to process interfaces only once. Check if this one was
+       already processed. */
+    for (ifaprev = ifap;
+	 ifaprev && ifaprev != ifa;
+	 ifaprev = ifaprev->ifa_next)
+      if (strcmp(ifaprev->ifa_name, ifa->ifa_name) == 0) goto nextif;
 
     log_debug("grab statistics for %s", ifa->ifa_name);
 
