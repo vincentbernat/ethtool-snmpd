@@ -50,7 +50,11 @@ oidmap_insert(struct oidmap *map,
   memcpy(n->om.oid, oid, oid_len * sizeof(oid));
   n->om.oid_len = oid_len;
   n->om.value = value;
-  RB_INSERT(oidmap, map, n);
+  if (RB_INSERT(oidmap, map, n) != NULL) {
+    /* Entry already present. */
+    free(n);
+    return NULL;
+  }
   return &n->om;
 }
 
@@ -58,7 +62,7 @@ oidmap_insert(struct oidmap *map,
 void
 oidmap_free(struct oidmap *map) {
   struct oidmap_node *current, *next;
-  for (current = RB_MIN(oidmap, map); current != NULL; current = next) {
+  for (current = RB_MIN(oidmap, map); current; current = next) {
     next = RB_NEXT(oidmap, map, current);
     RB_REMOVE(oidmap, map, current);
     free(current);

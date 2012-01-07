@@ -77,6 +77,8 @@ refresh_cache(void) {
     struct ifreq ifr;
     unsigned int n_stats, sz_str, sz_stats, i, ifindex;
 
+    log_debug("grab statistics for %s", ifa->ifa_name);
+
     memset(&ifr, 0, sizeof(ifr));
     strcpy(ifr.ifr_name, ifa->ifa_name);
 
@@ -132,8 +134,10 @@ refresh_cache(void) {
 		 ifindex,
 		 (char *)&strings->data[i * ETH_GSTRING_LEN],
 		 stats->data[i])) {
-	log_warnx("unable to add statistic to cache for %s", ifa->ifa_name);
-	break;			/* Big problem try to recover quickly. */
+	/* Not able to add to cache, already here, skip to next if. */
+	log_debug("not able to add entry for %s, interface already processed?",
+		  ifa->ifa_name);
+	break;
       }
 
   nextif:
