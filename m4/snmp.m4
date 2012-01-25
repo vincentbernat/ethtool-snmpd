@@ -10,9 +10,9 @@ AC_DEFUN([ethtool_snmpd_CHECK_SNMP], [
    NETSNMP_CFLAGS="`${NETSNMP_CONFIG} --base-cflags` -DNETSNMP_NO_INLINE"
 
    _save_flags="$CFLAGS"
-   _save_ldflags="$LDFLAGS"
+   _save_libs="$LIBS"
    CFLAGS="$CFLAGS ${NETSNMP_CFLAGS}"
-   LDFLAGS="$LDFLAGS ${NETSNMP_LIBS}"
+   LIBS="$LIBS ${NETSNMP_LIBS}"
    AC_MSG_CHECKING([whether C compiler supports flag "${NETSNMP_CFLAGS} ${NETSNMP_LIBS}" from Net-SNMP])
    AC_LINK_IFELSE([AC_LANG_PROGRAM([
 int main(void);
@@ -35,5 +35,5 @@ AC_MSG_ERROR([*** incorrect CFLAGS from net-snmp-config])])
    AC_SUBST([NETSNMP_CFLAGS])
 
    CFLAGS="$_save_flags"
-   LDFLAGS="$_save_ldflags"
+   LIBS="$_save_libs"
 ])
