@@ -51,7 +51,9 @@ refresh_cache(void) {
   /* Do we really need a refresh? */
   struct oidmap *new_cache = NULL;
   time_t now = time(NULL);
-  if (cache_stats && (now - cache_updated < CACHE_TIMEOUT))
+  if (cache_stats &&
+      (now - cache_updated < CACHE_TIMEOUT) &&
+      (now >= cache_updated))
     return;
 
   int skfd = -1;		/* Socket for ioctl */
