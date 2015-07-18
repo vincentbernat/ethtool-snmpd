@@ -19,6 +19,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include <net-snmp/agent/agent_sysORTable.h>
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -213,6 +214,10 @@ static struct variable3 ethtool_vars[] = {
 
 void
 init_ethtoolStatTable() {
+  int rc;
   log_debug("Initializing ethtoolStatTable");
   REGISTER_MIB("ethtoolStatTable", ethtool_vars, variable3, ethtool_oid);
+  if ((rc = register_sysORTable(ethtool_oid, OID_LENGTH(ethtool_oid),
+                                "The MIB module for ethtool")) != 0)
+    log_warnx("unable to register to sysORTable (%d)", rc);
 }
