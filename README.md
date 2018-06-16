@@ -3,7 +3,7 @@ ethtool-snmpd: implementation of a MIB for ethtool
 
 `ethtool-snmpd` is a subagent for NetSNMP (or any other agent
 supporting the AgentX protocol). It currently allows the export of
-ethtool statistics.
+ethtool statistics (both NIC and PHY).
 
 Here is an example of walk of this MIB:
 
