@@ -58,12 +58,12 @@ refresh_cache(void) {
     return;
 
   int skfd = -1;		/* Socket for ioctl */
+  struct ifaddrs *ifap = NULL, *ifa, *ifaprev;
   if ((skfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
     log_warn("Unable to open socket for ioctl");
     goto endrefresh;
   }
 
-  struct ifaddrs *ifap = NULL, *ifa, *ifaprev;
   if (getifaddrs(&ifap) != 0) {
     log_warn("Unable to get list of available interfaces");
     goto endrefresh;
