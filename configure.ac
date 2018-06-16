@@ -6,7 +6,9 @@
 
 # Configure autoconf
 AC_PREREQ([2.64])
-AC_INIT([ethtool-snmpd], [0.1], [bernat@luffy.cx])
+AC_INIT([ethtool-snmpd],
+        [m4_esyscmd_s([./get-version])],
+        [bernat@luffy.cx])
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_CONFIG_MACRO_DIR([m4])
