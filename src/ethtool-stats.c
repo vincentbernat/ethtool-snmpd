@@ -32,8 +32,10 @@
 
 /* Our cache */
 #define CACHE_TIMEOUT 30
-struct oidmap    *cache_stats   = NULL;
-time_t            cache_updated = 0;
+struct oidmap    *cache_nic_stats   = NULL;
+time_t            cache_nic_updated = 0;
+struct oidmap    *cache_phy_stats   = NULL;
+time_t            cache_phy_updated = 0;
 
 /* Add a value to the cache */
 static int
@@ -48,13 +50,14 @@ cache(struct oidmap *map,
 }
 
 static void
-refresh_cache(void) {
+refresh_cache(struct oidmap **cache_stats, time_t *cache_updated,
+              int cmd, int stringset, const char *name) {
   /* Do we really need a refresh? */
   struct oidmap *new_cache = NULL;
   time_t now = time(NULL);
-  if (cache_stats &&
-      (now - cache_updated < CACHE_TIMEOUT) &&
-      (now >= cache_updated))
+  if (*cache_stats &&
+      (now - *cache_updated < CACHE_TIMEOUT) &&
+      (now >= *cache_updated))
     return;
 
   int skfd = -1;		/* Socket for ioctl */
@@ -88,7 +91,7 @@ refresh_cache(void) {
 	 ifaprev = ifaprev->ifa_next)
       if (strcmp(ifaprev->ifa_name, ifa->ifa_name) == 0) goto nextif;
 
-    log_debug("grab statistics for %s", ifa->ifa_name);
+    log_debug("grab %s statistics for %s", name, ifa->ifa_name);
 
     memset(&ifr, 0, sizeof(ifr));
     strcpy(ifr.ifr_name, ifa->ifa_name);
@@ -102,7 +105,7 @@ refresh_cache(void) {
     }
     n_stats = drvinfo.n_stats;
     if (n_stats < 1) {
-      log_debug("no statistics available for %s", ifa->ifa_name);
+      log_debug("no %s statistics available for %s", name, ifa->ifa_name);
       continue;
     }
 
@@ -122,20 +125,20 @@ refresh_cache(void) {
 
     /* Grab stat names */
     strings->cmd = ETHTOOL_GSTRINGS;
-    strings->string_set = ETH_SS_STATS;
+    strings->string_set = stringset;
     strings->len = n_stats;
     ifr.ifr_data = (caddr_t) strings;
     if (ioctl(skfd, SIOCETHTOOL, &ifr) != 0) {
-      log_warn("unable to get statistic names for %s", ifa->ifa_name);
+      log_warn("unable to get %s statistic names for %s", name, ifa->ifa_name);
       goto nextif;
     }
 
     /* Grab stat values */
-    stats->cmd = ETHTOOL_GSTATS;
+    stats->cmd = cmd;
     stats->n_stats = n_stats;
     ifr.ifr_data = (caddr_t) stats;
     if (ioctl(skfd, SIOCETHTOOL, &ifr) != 0) {
-      log_warn("unable to get statistic values for %s", ifa->ifa_name);
+      log_warn("unable to get %s statistic values for %s", name, ifa->ifa_name);
       goto nextif;
     }
 
@@ -157,19 +160,33 @@ refresh_cache(void) {
   }
 
   /* Replace the cache with the new cache */
-  if (cache_stats) oidmap_free(cache_stats);
-  cache_stats = new_cache;
-  cache_updated = now;
+  if (*cache_stats) oidmap_free(*cache_stats);
+  *cache_stats = new_cache;
+  *cache_updated = now;
  endrefresh:
-  if (cache_stats != new_cache && new_cache) oidmap_free(new_cache);
+  if (*cache_stats != new_cache && new_cache) oidmap_free(new_cache);
   if (ifap) freeifaddrs(ifap);
   if (skfd >= 0) close(skfd);
 }
 
-/* Handle an incoming request for ethtoolStatTable */
+static void
+refresh_nic_cache(void) {
+  refresh_cache(&cache_nic_stats, &cache_nic_updated,
+    ETHTOOL_GSTATS, ETH_SS_STATS, "NIC");
+}
+
+static void
+refresh_phy_cache(void) {
+  refresh_cache(&cache_phy_stats, &cache_phy_updated,
+    ETHTOOL_GPHYSTATS, ETH_SS_PHY_STATS, "PHY");
+}
+
+/* Handle an incoming request for ethtool*StatTable */
 static u_char*
 ethtool_stat(struct variable *vp, oid *name, size_t *length,
-	     int exact, size_t *var_len, WriteMethod **write_method) {
+	     int exact, size_t *var_len, WriteMethod **write_method,
+             struct oidmap **cache_stats,
+             void (*refresh_cache)(void)) {
   static struct counter64 counter64_ret;
 
   *write_method = NULL;
@@ -183,17 +200,17 @@ ethtool_stat(struct variable *vp, oid *name, size_t *length,
 
   /* Refresh cache */
   refresh_cache();
-  if (!cache_stats) return NULL;
+  if (!*cache_stats) return NULL;
 
   /* Search a matching node */
   struct oidmap_entry *e;
   if (exact) {
-    e = oidmap_search(cache_stats,
+    e = oidmap_search(*cache_stats,
 		      name + vp->namelen,
 		      *length - vp->namelen);
     if (!e) return NULL;
   } else {
-    e = oidmap_search_next(cache_stats,
+    e = oidmap_search_next(*cache_stats,
 			   name + vp->namelen,
 			   *length - vp->namelen);
     if (!e) return NULL;
@@ -207,9 +224,24 @@ ethtool_stat(struct variable *vp, oid *name, size_t *length,
   return (u_char *)&counter64_ret;
 }
 
+static u_char*
+ethtool_nic_stat(struct variable *vp, oid *name, size_t *length,
+                 int exact, size_t *var_len, WriteMethod **write_method) {
+  return ethtool_stat(vp, name, length, exact, var_len, write_method,
+                      &cache_nic_stats, refresh_nic_cache);
+}
+
+static u_char*
+ethtool_phy_stat(struct variable *vp, oid *name, size_t *length,
+                 int exact, size_t *var_len, WriteMethod **write_method) {
+  return ethtool_stat(vp, name, length, exact, var_len, write_method,
+                      &cache_phy_stats, refresh_phy_cache);
+}
+
 static oid ethtool_oid[] = {1, 3, 6, 1, 4, 1, 39178, 100, 1};
 static struct variable3 ethtool_vars[] = {
-  {1, ASN_COUNTER64, RONLY, ethtool_stat, 3, {1, 1, 2}}
+  {1, ASN_COUNTER64, RONLY, ethtool_nic_stat, 3, {1, 1, 2}},
+  {2, ASN_COUNTER64, RONLY, ethtool_phy_stat, 3, {2, 1, 2}},
 };
 
 void

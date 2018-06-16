@@ -55,7 +55,7 @@ ethtoolStatTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
-	"Statistics from ethtool"
+	"Statistics from ethtool for NIC"
     ::= { ethtool 1 }
 
 ethtoolStatEntry OBJECT-TYPE
@@ -89,6 +89,48 @@ ethtoolStat OBJECT-TYPE
     ::= { ethtoolStatEntry 2 }
 
 ---
+--- ethtoolPhyStatTable
+---
+
+ethtoolPhyStatTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF EthtoolStatEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+	"Statistics from ethtool for PHY"
+    ::= { ethtool 2 }
+
+ethtoolPhyStatEntry OBJECT-TYPE
+    SYNTAX EthtoolStatEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+	"Statistic for one interface"
+    INDEX { ifIndex, IMPLIED ethtoolPhyStatName }
+    ::= { ethtoolPhyStatTable 1 }
+
+EthtoolStatEntry ::= SEQUENCE {
+    ethtoolPhyStatName EthtoolStatString,
+    ethtoolPhyStat     Counter64
+}
+
+ethtoolPhyStatName OBJECT-TYPE
+    SYNTAX EthtoolStatString
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+	"Name of the statistic as returned by ETHTOOL ioctl."
+    ::= { ethtoolPhyStatEntry 1 }
+
+ethtoolPhyStat OBJECT-TYPE
+    SYNTAX Counter64
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+	"Value of the statistic as returned by ETHTOOL ioctl."
+    ::= { ethtoolPhyStatEntry 2 }
+
+---
 --- ethtoolConformance
 ---
 
@@ -106,7 +148,8 @@ ethtoolCompliances MODULE-COMPLIANCE
 
 ethtoolStatGroup OBJECT-GROUP
     OBJECTS {
-       ethtoolStat
+       ethtoolStat,
+       ethtoolPhyStat
     }
     STATUS current
     DESCRIPTION
