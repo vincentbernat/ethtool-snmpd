@@ -170,7 +170,7 @@ refresh_cache(void) {
 static u_char*
 ethtool_stat(struct variable *vp, oid *name, size_t *length,
 	     int exact, size_t *var_len, WriteMethod **write_method) {
-  static U64  counter64_ret;
+  static struct counter64 counter64_ret;
 
   *write_method = NULL;
 
@@ -203,7 +203,7 @@ ethtool_stat(struct variable *vp, oid *name, size_t *length,
  
   counter64_ret.low = e->value & 0xffffffff;
   counter64_ret.high = e->value >> 32;
-  *var_len = sizeof(U64);
+  *var_len = sizeof(struct counter64);
   return (u_char *)&counter64_ret;
 }
 
