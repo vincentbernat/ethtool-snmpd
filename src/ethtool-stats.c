@@ -172,13 +172,15 @@ refresh_cache(struct oidmap **cache_stats, time_t *cache_updated,
 static void
 refresh_nic_cache(void) {
   refresh_cache(&cache_nic_stats, &cache_nic_updated,
-    ETHTOOL_GSTATS, ETH_SS_STATS, "NIC");
+                ETHTOOL_GSTATS, ETH_SS_STATS, "NIC");
 }
 
 static void
 refresh_phy_cache(void) {
+#ifdef ETHTOOL_GPHYSTATS
   refresh_cache(&cache_phy_stats, &cache_phy_updated,
-    ETHTOOL_GPHYSTATS, ETH_SS_PHY_STATS, "PHY");
+                ETHTOOL_GPHYSTATS, ETH_SS_PHY_STATS, "PHY");
+#endif
 }
 
 /* Handle an incoming request for ethtool*StatTable */
