@@ -51,7 +51,7 @@ cache(struct oidmap *map,
 
 static void
 refresh_cache(struct oidmap **cache_stats, time_t *cache_updated,
-              int cmd, int stringset, const char *name) {
+              int cmd, enum ethtool_stringset stringset, const char *name) {
   /* Do we really need a refresh? */
   struct oidmap *new_cache = NULL;
   time_t now = time(NULL);
