@@ -1,0 +1,10 @@
+language: c
+sudo: false
+script:
+  - ./autogen.sh
+  - ./configure
+  - make
+addons:
+  apt:
+    packages:
+      - libsnmp-dev
