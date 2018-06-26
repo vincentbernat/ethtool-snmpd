@@ -30,18 +30,36 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 
 # Check some compiler flags
-AX_CFLAGS_GCC_OPTION([-fdiagnostics-show-option])
-AX_CFLAGS_GCC_OPTION([-std=gnu99])
-AX_CFLAGS_GCC_OPTION([-pipe])
-AX_CFLAGS_GCC_OPTION([-Wall])
-AX_CFLAGS_GCC_OPTION([-W])
-AX_CFLAGS_GCC_OPTION([-Wextra])
-AX_CFLAGS_GCC_OPTION([-Wformat])
-AX_CFLAGS_GCC_OPTION([-Wformat-security])
-AX_CFLAGS_GCC_OPTION([-Wcast-align])
-AX_CFLAGS_GCC_OPTION([-Winline])
-AX_CFLAGS_GCC_OPTION([-fstack-protector])
-AX_CFLAGS_GCC_OPTION([-D_FORTIFY_SOURCE=2])
+AX_CFLAGS_GCC_OPTION([-fdiagnostics-show-option],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-pipe],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-Wall],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-W],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-Wextra],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-Wformat],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-Wformat-security],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-Wfatal-errors],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-Wcast-align],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-Winline],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-fstack-protector],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-D_FORTIFY_SOURCE=2],[MORE_CPPFLAGS])
+AX_CFLAGS_GCC_OPTION([-Wno-unused-parameter],[MORE_CFLAGS])
+AX_CFLAGS_GCC_OPTION([-Wno-missing-field-initializers],[MORE_CFLAGS])
+AX_LDFLAGS_OPTION([-Wl,-z,relro],[MORE_LDFLAGS])
+AX_LDFLAGS_OPTION([-Wl,-z,now],[MORE_LDFLAGS])
+AX_LDFLAGS_OPTION([-Wl,--push-state,--no-as-needed -lSegFault -Wl,--pop-state], [MORE_LDFLAGS])
+
+dnl Enable _GNU_SOURCE and the like
+AX_CFLAGS_GCC_OPTION([-D_GNU_SOURCE],[MORE_CPPFLAGS])    dnl GNU systems (asprintf, ...)
+case $host_os in
+   solaris*)
+     AX_CFLAGS_GCC_OPTION([-D__EXTENSIONS__],[MORE_CPPFLAGS]) dnl (CMSG_*)
+     AX_CFLAGS_GCC_OPTION([-D_XPG4_2],[MORE_CPPFLAGS])        dnl (CMSG_*)
+     ;;
+   hpux*)
+     AX_CFLAGS_GCC_OPTION([-D_XOPEN_SOURCE=500],[MORE_CPPFLAGS])      dnl HP-UX
+     AX_CFLAGS_GCC_OPTION([-D_XOPEN_SOURCE_EXTENDED],[MORE_CPPFLAGS]) dnl HP-UX
+     ;;
+esac
 
 AC_CACHE_SAVE
 
@@ -50,6 +68,10 @@ ethtool_snmpd_CHECK_HEADER_ETHTOOL
 ethtool_snmpd_CHECK_SNMP
 
 AC_CACHE_SAVE
+
+AC_SUBST([MORE_CFLAGS])
+AC_SUBST([MORE_CPPFLAGS])
+AC_SUBST([MORE_LDFLAGS])
 AC_OUTPUT
 
 cat <<EOF
@@ -57,8 +79,8 @@ cat <<EOF
 ------------------ Summary ------------------
  $PACKAGE_NAME version $PACKAGE_VERSION
   Prefix.........: $prefix
-  C Compiler.....: $CC $CFLAGS $CPPFLAGS
-  Linker.........: $LD $LDFLAGS $LIBS
+  C Compiler.....: $CC $MORE_CFLAGS $MORE_CPPFLAGS $CFLAGS $CPPFLAGS
+  Linker.........: $LD $MORE_LDFLAGS $LDFLAGS $LIBS
 ---------------------------------------------
 
 Check the above options and compile with:
