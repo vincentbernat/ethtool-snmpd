@@ -28,8 +28,8 @@ AC_INCLUDES_DEFAULT
                         [mac_cv_header_ethtool_h="yes (with type munging)"],
                         [mac_cv_header_ethtool_h=no]
                         )
-                ])
-        fi
+                fi
+        ])
         if test "$mac_cv_header_ethtool_h" = "yes (with type munging)"; then
                 AC_DEFINE(u8,  uint8_t,  [Define to the type u8 should expand to.])
                 AC_DEFINE(s8,  int8_t,   [Define to the type u8 should expand to.])
