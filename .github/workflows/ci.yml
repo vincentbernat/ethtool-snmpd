@@ -1,0 +1,26 @@
+---
+name: CI
+on:
+  push:
+    branches:
+      - master
+    tags:
+  pull_request:
+  schedule:
+    - cron: 10 7 1 * *
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt -yqq update
+          sudo apt -yqq install libsnmp-dev
+      - name: Build
+        run: |
+          ./autogen.sh
+          mkdir build~
+          cd build~
+          ../configure
+          make
