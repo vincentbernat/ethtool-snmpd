@@ -4,7 +4,7 @@
 #
 # SYNOPSIS
 #
-#   AX_LDFLAGS_OPTION(FLAG-TO-CHECK,[VAR])
+#   AX_LDFLAGS_OPTION(FLAG-TO-CHECK,[VAR],[NOTFOUND])
 #
 # DESCRIPTION
 #
@@ -50,7 +50,7 @@
 #serial 6
 
 AC_DEFUN([AX_LDFLAGS_OPTION],[
-  AC_PREREQ([2.61])
+  AC_PREREQ([2.69])
   AC_REQUIRE([AC_PROG_SED])
 
   flag=`echo "$1" | $SED 'y% .=/+-(){}<>:*,%_______________%'`
@@ -59,10 +59,10 @@ AC_DEFUN([AX_LDFLAGS_OPTION],[
     [ax_cv_ld_check_flag_$flag],[
 
     AC_LANG_SAVE
-    AC_LANG_C
+    AC_LANG([C])
 
     save_LDFLAGS="$LDFLAGS"
-    LDFLAGS="$LDFLAGS $[]m4_ifval($2,$2,) $1"
+    LDFLAGS="-Werror $LDFLAGS $[]m4_ifval($2,$2,) $1"
     AC_LINK_IFELSE([
       AC_LANG_PROGRAM([],[])
     ],[
@@ -79,5 +79,7 @@ AC_DEFUN([AX_LDFLAGS_OPTION],[
 
   AS_IF([eval "test \"`echo '$ax_cv_ld_check_flag_'$flag`\" = yes"],[
     m4_ifval($2,$2,LDFLAGS)="$[]m4_ifval($2,$2,LDFLAGS) $1"
+  ],[
+    :; $3
   ])
 ])

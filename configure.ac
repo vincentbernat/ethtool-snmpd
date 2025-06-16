@@ -5,7 +5,7 @@
 ### Base configuration
 
 # Configure autoconf
-AC_PREREQ([2.64])
+AC_PREREQ([2.69])
 AC_INIT([ethtool-snmpd],
         [m4_esyscmd_s([./get-version])],
         [bernat@luffy.cx])
