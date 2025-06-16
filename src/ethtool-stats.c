@@ -27,6 +27,7 @@
 #include <ifaddrs.h>
 #include <linux/sockios.h>
 #include <linux/ethtool.h>
+#include <unistd.h>
 
 #include "ethtool-snmpd.h"
 
