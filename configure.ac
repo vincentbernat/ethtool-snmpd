@@ -12,6 +12,7 @@ AC_INIT([ethtool-snmpd],
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_CONFIG_MACRO_DIR([m4])
+AC_SUBST([CONFIGURE_ARGS], [$ac_configure_args])
 
 # Configure automake
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
@@ -68,6 +69,15 @@ ethtool_snmpd_CHECK_HEADER_ETHTOOL
 ethtool_snmpd_CHECK_SNMP
 
 AC_CACHE_SAVE
+
+AS_IF([test "x$runstatedir" = x], [
+    AC_SUBST([runstatedir], ['${localstatedir}/run'])
+])
+AC_ARG_WITH([ethtool-snmpd-pid-file],
+	AC_HELP_STRING([--with-ethtool-snmpd-pid-file],
+		       [Path to ethtool-snmpd PID file]),
+	AC_DEFINE_UNQUOTED([ETHTOOL_SNMPD_PID_FILE], "$withval", [Path to ethtool-snmpd PID file]),
+	AC_DEFINE_UNQUOTED([ETHTOOL_SNMPD_PID_FILE], "${runstatedir}/ethtool-snmpd", [Path to ethtool-snmpd PID file]))
 
 AC_SUBST([MORE_CFLAGS])
 AC_SUBST([MORE_CPPFLAGS])
