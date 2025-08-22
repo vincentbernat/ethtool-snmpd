@@ -21,6 +21,9 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "ethtool-snmpd.h"
 
 #define PROGNAME "ethtool-snmpd"
@@ -84,8 +87,26 @@ main(int argc, char **argv) {
 
 
   /* Detach as a daemon */
+  log_debug("going into background");
   if (!debug && (daemon(0, 0) != 0))
     fatal("failed to detach daemon");
+  const char *pidfile = ETHTOOL_SNMPD_PID_FILE;
+  int pid;
+  char *spid;
+  if ((pid = open(pidfile, O_TRUNC | O_CREAT | O_WRONLY, 0666)) == -1)
+    fatal(
+      "unable to open pid file " ETHTOOL_SNMPD_PID_FILE
+      " (or the specified one)");
+  if (asprintf(&spid, "%d\n", getpid()) == -1)
+    fatal(
+      "unable to create pid file " ETHTOOL_SNMPD_PID_FILE
+      " (or the specified one)");
+  if (write(pid, spid, strlen(spid)) == -1)
+    fatal(
+      "unable to write pid file " ETHTOOL_SNMPD_PID_FILE
+      " (or the specified one)");
+  free(spid);
+  close(pid);
 
   /* Main loop */
   keep_running = 1;
